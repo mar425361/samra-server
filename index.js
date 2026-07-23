@@ -1,32 +1,47 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const cors = require('cors');
 
 const app = express();
-const server = http.createServer(app);
+app.use(cors());
 
+const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
 });
 
 app.get('/', (req, res) => {
-  res.send('Samra Game Server is Running! 🟢');
+    res.send('Samra Game Server is running successfully!');
 });
 
 io.on('connection', (socket) => {
-  socket.on('join_room', (roomId) => {
-    socket.join(roomId);
-  });
+    console.log('User connected: ' + socket.id);
 
-  socket.on('game_action', (data) => {
-    io.to(data.roomId).emit('game_update', data);
-  });
+    // انضمام الأجهزة للغرفة الموحدة
+    socket.on('join_room', (room) => {
+        socket.join(room);
+        console.log(`User ${socket.id} joined room: ${room}`);
+    });
+
+    // استقبال الأوامر من الريموت وبثها للشاشة فوراً
+    socket.on('game_action', (data) => {
+        if (data && data.room) {
+            // إرسال البيانات المحدثة لكل من في الغرفة (بما فيها الشاشة)
+            io.to(data.room).emit('game_update', data);
+            console.log(`Action [${data.action}] broadcasted to room: ${data.room}`);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected: ' + socket.id);
+    });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
