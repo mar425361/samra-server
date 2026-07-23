@@ -17,12 +17,10 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-  // عند انضمام الجوال أو الشاشة لغرفة معينة
   socket.on('join_room', (roomId) => {
     socket.join(roomId);
   });
 
-  // إعادة توجيه الأوامر من الجوال للشاشة فوراً
   socket.on('game_action', (data) => {
     io.to(data.roomId).emit('game_update', data);
   });
