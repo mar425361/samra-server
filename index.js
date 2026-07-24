@@ -18,6 +18,11 @@ app.get('/', (req, res) => {
     res.send('Samra Game Server is running successfully!');
 });
 
+// المسار المضاف لمنع السيرفر من النوم عبر Uptime Robot
+app.get('/ping', (req, res) => {
+    res.status(200).send('Alive!');
+});
+
 io.on('connection', (socket) => {
     console.log('User connected: ' + socket.id);
 
@@ -30,7 +35,6 @@ io.on('connection', (socket) => {
     // استقبال الأوامر من الريموت وبثها للشاشة فوراً
     socket.on('game_action', (data) => {
         if (data && data.room) {
-            // إرسال البيانات المحدثة لكل من في الغرفة (بما فيها الشاشة)
             io.to(data.room).emit('game_update', data);
             console.log(`Action [${data.action}] broadcasted to room: ${data.room}`);
         }
